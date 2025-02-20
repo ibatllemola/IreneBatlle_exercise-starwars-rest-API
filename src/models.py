@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from eralchemy2 import render_er
-from datetime import datetime
+from datetime import datetime, timezone
 
 db = SQLAlchemy()
 
@@ -14,7 +14,7 @@ class BaseModel(db.Model):
     def as_dict(self):
         return {column.name: getattr(self, column.name) for column in self.__table__.columns}
 
-class UserSW(BaseModel):
+class User(BaseModel):
     __tablename__ = 'user_sw'
     ID = Column(Integer, primary_key=True)
     username = Column(String(40), nullable=False, unique=True)
@@ -22,7 +22,7 @@ class UserSW(BaseModel):
     firstname = Column(String(100), nullable=False)
     lastname = Column(String(100), nullable=False)
     email = Column(String(100), nullable=False, unique=True)
-    creation = Column(DateTime, default=datetime.utcnow, nullable=False)
+    created = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     favorites = relationship('Favorites', back_populates='user')
 
@@ -38,8 +38,8 @@ class Planet(BaseModel):
     climate = Column(String(100), nullable=False)
     terrain = Column(String(100), nullable=False)
     surface_water = Column(String(50), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    edited = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    edited = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     favorites = relationship('Favorites', back_populates='planet')
 
@@ -56,8 +56,8 @@ class People(BaseModel):
     skin_color = Column(String(50), nullable=False)
     homeworld = Column(String(100), nullable=False)
     url = Column(String(200), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    edited = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    edited = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     favorites = relationship('Favorites', back_populates='people')
 
@@ -75,8 +75,8 @@ class Vehicle(BaseModel):
     cargo_capacity = Column(String(50), nullable=False)
     consumables = Column(String(100), nullable=False)
     url = Column(String(200), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    edited = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    edited = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     favorites = relationship('Favorites', back_populates='vehicle')
 
@@ -97,8 +97,8 @@ class Starship(BaseModel):
     cargo_capacity = Column(String(50), nullable=False)
     consumables = Column(String(100), nullable=False)
     url = Column(String(200), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    edited = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    edited = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     favorites = relationship('Favorites', back_populates='starship')
 
@@ -112,8 +112,8 @@ class Film(BaseModel):
     producer = Column(String(200), nullable=False)
     release_date = Column(DateTime, nullable=False)
     url = Column(String(200), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    edited = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    edited = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     favorites = relationship('Favorites', back_populates='film')
 
@@ -131,15 +131,15 @@ class Species(BaseModel):
     language = Column(String(100), nullable=False)
     homeworld = Column(String(100), nullable=False)
     url = Column(String(200), nullable=False)
-    created = Column(DateTime, default=datetime.utcnow, nullable=False)
-    edited = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    edited = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
     favorites = relationship('Favorites', back_populates='species')
 
 class Favorites(BaseModel):
     __tablename__ = 'favorites'
     ID = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('user_sw.ID'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.ID'), nullable=False)
     people_id = Column(Integer, ForeignKey('people.ID'), nullable=True)
     vehicle_id = Column(Integer, ForeignKey('vehicle.ID'), nullable=True)
     planet_id = Column(Integer, ForeignKey('planet.ID'), nullable=True)
@@ -147,7 +147,7 @@ class Favorites(BaseModel):
     species_id = Column(Integer, ForeignKey('species.ID'), nullable=True)
     film_id = Column(Integer, ForeignKey('film.ID'), nullable=True)
 
-    user = relationship('UserSW', back_populates='favorites')
+    user = relationship('User', back_populates='favorites')
     people = relationship('People', back_populates='favorites')
     vehicle = relationship('Vehicle', back_populates='favorites')
     planet = relationship('Planet', back_populates='favorites')
